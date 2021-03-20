@@ -1,4 +1,4 @@
-import React, { useMemo, useReducer } from 'react'
+import React, { useEffect, useReducer, useState } from 'react'
 import {
   ChakraProvider,
   Box,
@@ -15,14 +15,15 @@ import {
   FaArrowLeft,
   FaChevronDown,
   FaChevronUp,
+  FaPause,
   FaPlay,
   FaRedo,
   FaStepBackward,
   FaStepForward,
 } from 'react-icons/fa'
 import { ColorModeSwitcher } from './ColorModeSwitcher'
-import { range } from 'ramda'
 import { motion, AnimateSharedLayout } from 'framer-motion'
+import { useHanoi } from './hanoi'
 
 const theme = extendTheme({
   config: { initialColorMode: 'dark', useSystemColorMode: false },
@@ -63,92 +64,60 @@ const Menu = ({ n, proceed }) => {
   )
 }
 
-const reverseMove = ({ from, to }) => ({ from: to, to: from })
-
-const move = (from, to) => ({ from, to })
-function* hanoi(n, src, dest, temp) {
-  if (n === 1) {
-    yield move(src, dest)
-  } else {
-    yield* hanoi(n - 1, src, temp, dest)
-    yield move(src, dest)
-    yield* hanoi(n - 1, temp, dest, src)
-  }
-}
-
-const applyMove = (piles, { from, to }) => {
-  const newPiles = [...piles]
-
-  newPiles[from] = piles[from].slice(0, piles[from].length - 1)
-  newPiles[to] = [...piles[to], piles[from][piles[from].length - 1]]
-
-  return newPiles
-}
-
 const AnimatedFlex = motion(Flex)
 const AnimatedBox = motion(Box)
+
+const useTimer = (step, action, stopWhen) => {
+  const [playing, setPlaying] = useState(false)
+
+  if (playing && stopWhen) setPlaying(false)
+
+  useEffect(() => {
+    if (playing) {
+      const id = setInterval(() => action(), step)
+      return () => clearInterval(id)
+    }
+  }, [action, step, playing])
+
+  const playPause = () => setPlaying((n) => !n)
+
+  return [playing, playPause]
+}
 
 const Runner = ({ goBack, n }) => {
   const boxColor = useColorModeValue('gray.500', 'gray.200')
   const pileColor = useColorModeValue('gray.400', 'gray.500')
 
-  const movements = useMemo(() => [...hanoi(n, 0, 2, 1)], [n])
+  const {
+    state: { i, piles, total },
+    actions: { step, stepBack, reset },
+    selectors: { canStep, canStepBack },
+  } = useHanoi(n)
 
-  const initialPiles = () => [range(1, n + 1).reverse(), [], []]
+  const [playing, playPause] = useTimer(400, step, !canStep)
 
-  const canStep = ({ i }) => i < movements.length
-  const canStepBack = ({ i }) => 0 < i
+  const resetHanoi = () => {
+    if (playing) {
+      playPause()
+    }
 
-  const [state, apply] = useReducer(
-    (old, act) => {
-      switch (act.type) {
-        case 'step': {
-          if (canStep(old)) {
-            return {
-              piles: applyMove(old.piles, movements[old.i]),
-              i: old.i + 1,
-            }
-          }
+    reset()
+  }
 
-          break
-        }
-        case 'backStep': {
-          if (canStepBack(old)) {
-            return {
-              piles: applyMove(old.piles, reverseMove(movements[old.i - 1])),
-              i: old.i - 1,
-            }
-          }
+  const playPauseHanoi = () => {
+    if (!playing && canStep) step()
 
-          break
-        }
-        case 'reset': {
-          return {
-            piles: initialPiles(),
-            i: 0,
-          }
-        }
-        default:
-          return old
-      }
-
-      return old
-    },
-    { piles: initialPiles(), i: 0 }
-  )
-
-  const { piles, i } = state
-
-  const applyBuild = (type) => () => apply({ type })
-  const step = applyBuild('step')
-  const backStep = applyBuild('backStep')
-  const reset = applyBuild('reset')
+    playPause()
+  }
 
   return (
     <VStack spacing={8} alignSelf="center">
-      <Text fontSize="6xl" color={boxColor}>
-        {i}
-      </Text>
+      <VStack spacing={0}>
+        <Text fontSize="6xl" color={boxColor}>
+          {i}
+        </Text>
+        <Text color={boxColor}>{total - i}</Text>
+      </VStack>
       <Grid
         templateColumns="repeat(3, 20vw)"
         gridColumnGap="10vw"
@@ -183,17 +152,21 @@ const Runner = ({ goBack, n }) => {
           icon={<FaArrowLeft />}
           onClick={() => goBack(n)}
         ></IconButton>
-        <IconButton icon={<FaPlay />}></IconButton>
-        <IconButton icon={<FaRedo />} onClick={reset}></IconButton>
+        <IconButton
+          icon={playing ? <FaPause /> : <FaPlay />}
+          disabled={!canStep}
+          onClick={playPauseHanoi}
+        ></IconButton>
+        <IconButton icon={<FaRedo />} onClick={resetHanoi}></IconButton>
         <IconButton
           icon={<FaStepBackward />}
-          onClick={backStep}
-          disabled={!canStepBack(state)}
+          onClick={stepBack}
+          disabled={playing || !canStepBack}
         ></IconButton>
         <IconButton
           icon={<FaStepForward />}
           onClick={step}
-          disabled={!canStep(state)}
+          disabled={playing || !canStep}
         ></IconButton>
       </HStack>
     </VStack>
