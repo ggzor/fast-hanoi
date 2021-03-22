@@ -24,39 +24,31 @@ import {
 import { ColorModeSwitcher } from './ColorModeSwitcher'
 import { motion, AnimateSharedLayout } from 'framer-motion'
 import { useHanoi } from './hanoi'
+import { useCounter } from './hooks'
 
 const theme = extendTheme({
   config: { initialColorMode: 'dark', useSystemColorMode: false },
 })
 
-const useCounter = (min, max, value) => {
-  const [count, setCount] = useState(value)
-
-  const inc = () => setCount((c) => (c < max ? c + 1 : c))
-  const dec = () => setCount((c) => (min < c ? c - 1 : c))
-
-  return [count, inc, dec]
-}
-
 const Menu = ({ n, proceed }) => {
   const minHanoi = 1
   const maxHanoi = 10
 
-  const [count, inc, dec] = useCounter(minHanoi, maxHanoi, n)
+  const [count, inc, dec, { check }] = useCounter(minHanoi, maxHanoi, n)
 
   return (
     <VStack spacing={8}>
       <VStack spacing={4}>
         <IconButton
           icon={<FaChevronUp />}
-          disabled={!(count < maxHanoi)}
+          disabled={!check.canIncrement}
           onClick={inc}
         ></IconButton>
         <Text fontSize="6xl">{count}</Text>
         <IconButton
           icon={<FaChevronDown />}
           onClick={dec}
-          disabled={!(minHanoi < count)}
+          disabled={!check.canDecrement}
         ></IconButton>
       </VStack>
       <IconButton icon={<FaPlay />} onClick={() => proceed(count)}></IconButton>

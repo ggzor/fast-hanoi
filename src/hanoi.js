@@ -1,9 +1,8 @@
-import { range } from 'ramda'
-import { useMemo, useState } from 'react'
+import { range, scan } from 'ramda'
+import { useMemo } from 'react'
 
 import { produce } from 'immer'
-
-const reverseMove = ({ from, to }) => ({ from: to, to: from })
+import { useCounter } from './hooks'
 
 const move = (from, to) => ({ from, to })
 function* hanoi(n, src, dest, temp) {
@@ -24,34 +23,25 @@ const applyMove = (piles, { from, to }) =>
 
 const initialPilesOf = (n) => [range(1, n + 1).reverse(), [], []]
 
+const hanoiStates = (n) =>
+  scan(applyMove, initialPilesOf(n), [...hanoi(n, 0, 2, 1)])
+
 export const useHanoi = (n) => {
-  const movements = useMemo(() => [...hanoi(n, 0, 2, 1)], [n])
+  const states = useMemo(() => hanoiStates(n), [n])
 
-  const initialState = () => [0, initialPilesOf(n)]
-  const [[i, piles], setState] = useState(initialState)
-
-  const canStep = i < movements.length
-  const canStepBack = 0 < i
-
-  const step = () => {
-    if (canStep)
-      setState(([i, piles]) => [i + 1, applyMove(piles, movements[i])])
-  }
-
-  const stepBack = () => {
-    if (canStepBack) {
-      setState(([i, piles]) => [
-        i - 1,
-        applyMove(piles, reverseMove(movements[i - 1])),
-      ])
-    }
-  }
-
-  const reset = () => setState(initialState)
+  const [
+    i,
+    step,
+    stepBack,
+    {
+      check,
+      do: { setTo },
+    },
+  ] = useCounter(0, states.length - 1, 0)
 
   return {
-    state: { i, piles, total: movements.length },
-    actions: { step, stepBack, reset },
-    selectors: { canStep, canStepBack },
+    state: { i, piles: states[i], total: states.length },
+    actions: { step, stepBack, reset: () => setTo(0) },
+    selectors: { canStep: check.canIncrement, canStepBack: check.canDecrement },
   }
 }
