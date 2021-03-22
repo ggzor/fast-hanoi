@@ -1,9 +1,14 @@
-import React, { useEffect, useReducer, useState } from 'react'
+import React, { useEffect, useReducer, useRef, useState } from 'react'
 import {
   ChakraProvider,
   Box,
   VStack,
   Grid,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+  SlideFade,
   extendTheme,
   IconButton,
   Text,
@@ -25,6 +30,7 @@ import { ColorModeSwitcher } from './ColorModeSwitcher'
 import { motion, AnimateSharedLayout } from 'framer-motion'
 import { useHanoi } from './hanoi'
 import { useCounter } from './hooks'
+import { debounce } from 'lodash-es'
 
 const theme = extendTheme({
   config: { initialColorMode: 'dark', useSystemColorMode: false },
@@ -82,7 +88,7 @@ const Runner = ({ goBack, n }) => {
 
   const {
     state: { i, piles, total },
-    actions: { step, stepBack, reset },
+    actions: { step, stepBack, reset, setTo },
     selectors: { canStep, canStepBack },
   } = useHanoi(n)
 
@@ -96,6 +102,27 @@ const Runner = ({ goBack, n }) => {
     reset()
   }
 
+  // Don't look here :(
+  // Used to debounce the slider setter but letting the slider
+  // be responsive and managed
+  const [sliderI, setSliderI] = useState(0)
+  useEffect(() => {
+    if (!playing) setSliderI(i)
+  }, [playing, i])
+  const debouncedSetTo = useRef(debounce(setTo, 120)).current
+  useEffect(() => {
+    if (!playing) debouncedSetTo(sliderI)
+  }, [debouncedSetTo, sliderI, playing])
+  // Used to sync slider when not playing and when changing slider
+  // Equivalent to rxjs merge
+  const [label, setLabel] = useState(0)
+  useEffect(() => {
+    setLabel(i)
+  }, [i])
+  useEffect(() => {
+    setLabel(sliderI)
+  }, [sliderI])
+
   const playPauseHanoi = () => {
     if (!playing && canStep) step()
 
@@ -103,12 +130,12 @@ const Runner = ({ goBack, n }) => {
   }
 
   return (
-    <VStack spacing={8} alignSelf="center">
+    <VStack padding={4} spacing={8} alignSelf="center">
       <VStack spacing={0}>
         <Text fontSize="6xl" color={boxColor}>
-          {i}
+          {label}
         </Text>
-        <Text color={boxColor}>{total - i}</Text>
+        <Text color={boxColor}>{total - label}</Text>
       </VStack>
       <Grid
         templateColumns="repeat(3, 20vw)"
@@ -161,6 +188,21 @@ const Runner = ({ goBack, n }) => {
           disabled={playing || !canStep}
         ></IconButton>
       </HStack>
+      <SlideFade in={!playing}>
+        <Slider
+          width="90vw"
+          min={0}
+          max={total - 1}
+          onChange={setSliderI}
+          value={sliderI}
+          isReadOnly={playing}
+        >
+          <SliderTrack>
+            <SliderFilledTrack />
+          </SliderTrack>
+          <SliderThumb />
+        </Slider>
+      </SlideFade>
     </VStack>
   )
 }

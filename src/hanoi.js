@@ -41,7 +41,7 @@ export const useHanoi = (n) => {
 
   return {
     state: { i, piles: states[i], total: states.length },
-    actions: { step, stepBack, reset: () => setTo(0) },
+    actions: { step, stepBack, reset: () => setTo(0), setTo },
     selectors: { canStep: check.canIncrement, canStepBack: check.canDecrement },
   }
 }
