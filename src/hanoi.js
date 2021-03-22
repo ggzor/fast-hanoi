@@ -1,6 +1,8 @@
 import { range } from 'ramda'
 import { useMemo, useState } from 'react'
 
+import { produce } from 'immer'
+
 const reverseMove = ({ from, to }) => ({ from: to, to: from })
 
 const move = (from, to) => ({ from, to })
@@ -14,14 +16,11 @@ function* hanoi(n, src, dest, temp) {
   }
 }
 
-const applyMove = (piles, { from, to }) => {
-  const newPiles = [...piles]
-
-  newPiles[from] = piles[from].slice(0, piles[from].length - 1)
-  newPiles[to] = [...piles[to], piles[from][piles[from].length - 1]]
-
-  return newPiles
-}
+const applyMove = (piles, { from, to }) =>
+  produce(piles, (newPiles) => {
+    const disk = newPiles[from].pop()
+    newPiles[to].push(disk)
+  })
 
 const initialPilesOf = (n) => [range(1, n + 1).reverse(), [], []]
 
