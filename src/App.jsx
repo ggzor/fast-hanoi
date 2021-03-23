@@ -15,7 +15,6 @@ import {
   HStack,
   Flex,
   useColorModeValue,
-  Icon,
   Link,
 } from '@chakra-ui/react'
 import {
