@@ -1,8 +1,10 @@
 # Fast-Hanoi
 
-A Tower's of Hanoi visualizer
+A Tower's of Hanoi visualizer.
 
 ![Live site hanoi towers visualizer capture](assets/capture.gif)
+
+[Go to site](https://fast-hanoi.netlify.app/)
 
 ## Technologies used
 
@@ -13,7 +15,7 @@ A Tower's of Hanoi visualizer
 
 ## Additional notes
 
-- It's not fast, I just meant that I made it as fast as I could
+- It's not fast, I just meant that I made it as fast as I could.
 - The code is not that great, I made a terrible hack to improve
   the slider's user experience.
 
