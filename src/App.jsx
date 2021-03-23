@@ -32,7 +32,6 @@ import { ColorModeSwitcher } from './ColorModeSwitcher'
 import { motion, AnimateSharedLayout } from 'framer-motion'
 import { useHanoi } from './hanoi'
 import { useCounter } from './hooks'
-import { debounce } from 'lodash-es'
 
 const theme = extendTheme({
   config: { initialColorMode: 'dark', useSystemColorMode: false },
@@ -119,27 +118,6 @@ const Runner = ({ goBack, n }) => {
     reset()
   }
 
-  // Don't look here :(
-  // Used to debounce the slider setter but letting the slider
-  // be responsive and managed
-  const [sliderI, setSliderI] = useState(0)
-  useEffect(() => {
-    if (!playing) setSliderI(i)
-  }, [playing, i])
-  const debouncedSetTo = useRef(debounce(setTo, 120)).current
-  useEffect(() => {
-    if (!playing) debouncedSetTo(sliderI)
-  }, [debouncedSetTo, sliderI, playing])
-  // Used to sync slider when not playing and when changing slider
-  // Equivalent to rxjs merge
-  const [label, setLabel] = useState(0)
-  useEffect(() => {
-    setLabel(i)
-  }, [i])
-  useEffect(() => {
-    setLabel(sliderI)
-  }, [sliderI])
-
   const playPauseHanoi = () => {
     if (!playing && canStep) step()
 
@@ -150,9 +128,9 @@ const Runner = ({ goBack, n }) => {
     <VStack padding={4} spacing={8} alignSelf="center">
       <VStack spacing={0}>
         <Text fontSize="6xl" color={boxColor}>
-          {label}
+          {i}
         </Text>
-        <Text color={boxColor}>{total - label}</Text>
+        <Text color={boxColor}>{total - i}</Text>
       </VStack>
       <Grid
         templateColumns="repeat(3, 20vw)"
@@ -201,7 +179,7 @@ const Runner = ({ goBack, n }) => {
         ></IconButton>
         <IconButton
           icon={<FaStepForward />}
-          onClick={step}
+          onClick={() => setTo(i + 1)}
           disabled={playing || !canStep}
         ></IconButton>
       </HStack>
@@ -210,8 +188,8 @@ const Runner = ({ goBack, n }) => {
           width="90vw"
           min={0}
           max={total - 1}
-          onChange={setSliderI}
-          value={sliderI}
+          onChange={setTo}
+          value={i}
           isReadOnly={playing}
         >
           <SliderTrack>
