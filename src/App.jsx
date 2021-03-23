@@ -15,11 +15,14 @@ import {
   HStack,
   Flex,
   useColorModeValue,
+  Icon,
+  Link,
 } from '@chakra-ui/react'
 import {
   FaArrowLeft,
   FaChevronDown,
   FaChevronUp,
+  FaGithub,
   FaPause,
   FaPlay,
   FaRedo,
@@ -43,21 +46,36 @@ const Menu = ({ n, proceed }) => {
   const [count, inc, dec, { check }] = useCounter(minHanoi, maxHanoi, n)
 
   return (
-    <VStack spacing={8}>
-      <VStack spacing={4}>
+    <VStack spacing={16}>
+      <VStack spacing={8}>
+        <VStack spacing={4}>
+          <IconButton
+            icon={<FaChevronUp />}
+            disabled={!check.canIncrement}
+            onClick={inc}
+          ></IconButton>
+          <Text fontSize="6xl">{count}</Text>
+          <IconButton
+            icon={<FaChevronDown />}
+            onClick={dec}
+            disabled={!check.canDecrement}
+          ></IconButton>
+        </VStack>
         <IconButton
-          icon={<FaChevronUp />}
-          disabled={!check.canIncrement}
-          onClick={inc}
-        ></IconButton>
-        <Text fontSize="6xl">{count}</Text>
-        <IconButton
-          icon={<FaChevronDown />}
-          onClick={dec}
-          disabled={!check.canDecrement}
+          icon={<FaPlay />}
+          onClick={() => proceed(count)}
         ></IconButton>
       </VStack>
-      <IconButton icon={<FaPlay />} onClick={() => proceed(count)}></IconButton>
+      <HStack>
+        <FaGithub fontSize="0.7em" />
+        <Link
+          fontSize="0.7em"
+          href="https://github.com/ggzor/fast-hanoi"
+          isExternal
+        >
+          ggzor
+        </Link>
+      </HStack>
     </VStack>
   )
 }
