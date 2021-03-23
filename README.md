@@ -1,6 +1,6 @@
 # Fast-Hanoi
 
-A Hanoi towers visualizer
+A Tower's of Hanoi visualizer
 
 ![Live site hanoi towers visualizer capture](assets/capture.gif)
 
@@ -14,3 +14,6 @@ A Hanoi towers visualizer
 ## Additional notes
 
 - It's not fast, I just meant that I made it as fast as I could
+- The code is not that great, I made a terrible hack to improve
+  the slider's user experience.
+
